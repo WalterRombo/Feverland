@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Feverland</title>
+<meta name="theme-color" content="#EAE6DC" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EAE6DC;
+    --paper-raised: #F2EFE7;
+    --ink: #2E3532;
+    --ink-soft: #5C665F;
+    --hairline: rgba(46, 53, 50, 0.16);
+    --personal: #5B7B6A;
+    --personal-tint: rgba(91, 123, 106, 0.12);
+    --work: #7A5C3E;
+    --work-tint: rgba(122, 92, 62, 0.12);
+    --creative: #8B6F9E;
+    --admin: #56626B;
+    --bin: #A65246;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  #root { min-height: 100vh; display: flex; flex-direction: column; }
+
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-optical-sizing: auto;
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .app-header h1 { margin: 0; font-size: 26px; }
+
+  .stream-toggle {
+    display: flex;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 3px;
+    background: var(--paper-raised);
+  }
+  .stream-toggle button {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .stream-toggle button.active.personal { background: var(--personal); color: white; }
+  .stream-toggle button.active.work { background: var(--work); color: white; }
+
+  nav.pill-nav {
+    display: flex;
+    gap: 6px;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px 14px;
+    overflow-x: auto;
+  }
+  nav.pill-nav button {
+    flex: 0 0 auto;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 7px 13px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  nav.pill-nav button.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  main {
+    flex: 1;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  .panel-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    margin: 6px 0 14px;
+  }
+
+  .capture-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .capture-box textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 14px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .capture-box textarea:focus {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+  }
+  .capture-box button.add-btn {
+    align-self: flex-start;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .capture-box button.add-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .capture-log {
+    margin-top: 22px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 14px;
+  }
+  .capture-log-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-flag {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .item-text { flex: 1; font-size: 15px; line-height: 1.45; }
+  .item-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .tag-chip {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .tag-chip.creative { background: rgba(139,111,158,0.15); color: var(--creative); }
+  .tag-chip.admin { background: rgba(86,98,107,0.15); color: var(--admin); }
+  .tag-chip.stream-personal { background: var(--personal-tint); color: var(--personal); }
+  .tag-chip.stream-work { background: var(--work-tint); color: var(--work); }
+
+  .empty-state {
+    padding: 40px 10px;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .empty-state .big {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  /* Triage */
+  .triage-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 22px;
+    animation: cardIn 0.28s ease;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .triage-card.dismissing {
+    animation: cardOut 0.22s ease forwards;
+  }
+  @keyframes cardOut {
+    to { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  }
+  .triage-text {
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .triage-step-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .triage-btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .triage-btn {
+    border: 1px solid var(--hairline);
+    background: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .triage-btn.personal-btn { border-color: var(--personal); color: var(--personal); }
+  .triage-btn.personal-btn:hover { background: var(--personal-tint); }
+  .triage-btn.work-btn { border-color: var(--work); color: var(--work); }
+  .triage-btn.work-btn:hover { background: var(--work-tint); }
+  .triage-btn.bin-btn { border-color: var(--bin); color: var(--bin); }
+  .triage-btn.bin-btn:hover { background: rgba(166,82,70,0.1); }
+  .triage-btn.creative-btn { border-color: var(--creative); color: var(--creative); }
+  .triage-btn.creative-btn.selected, .triage-btn.selected {
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+  }
+  .triage-btn.admin-btn { border-color: var(--admin); color: var(--admin); }
+  .triage-btn.skip-btn { color: var(--ink-soft); border-style: dashed; }
+  .triage-back {
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 13px; cursor: pointer; margin-top: 8px; padding: 4px 0;
+  }
+  .triage-progress {
+    font-size: 12px; color: var(--ink-soft); margin-bottom: 12px;
+  }
+
+  /* Today */
+  .today-list { display: flex; flex-direction: column; gap: 8px; }
+  .today-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .today-item.top3 { border-width: 1px; border-color: var(--ink); }
+  .rank-num {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    color: var(--ink-soft);
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .today-item.top3 .rank-num { color: var(--ink); font-weight: 600; }
+  .today-text { flex: 1; font-size: 15px; }
+  .reorder-btns { display: flex; flex-direction: column; }
+  .reorder-btns button {
+    border: none; background: none; color: var(--ink-soft);
+    cursor: pointer; font-size: 11px; padding: 1px 4px; line-height: 1;
+  }
+  .row-actions button {
+    border: none; background: none; color: var(--ink-soft);
+    cursor: pointer; font-size: 12px; padding: 4px 6px;
+  }
+  .row-actions button:hover { color: var(--bin); }
+  .section-divider {
+    font-size: 12px; color: var(--ink-soft); margin: 18px 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-divider::after {
+    content: ''; flex: 1; border-top: 1px solid var(--hairline);
+  }
+
+  /* Someday */
+  .tag-filter-row { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tag-filter-row button {
+    border: 1px solid var(--hairline); background: transparent;
+    padding: 5px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .tag-filter-row button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* Review */
+  .review-block {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .review-block h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0 0 10px;
+  }
+  .review-count {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .stale-item-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--hairline); gap: 10px;
+  }
+  .stale-item-row:last-child { border-bottom: none; }
+  .stale-actions button {
+    border: 1px solid var(--hairline); background: white;
+    padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-left: 6px;
+  }
+  .stale-actions button.keep-btn { color: var(--personal); border-color: var(--personal); }
+  .stale-actions button.bin-btn2 { color: var(--bin); border-color: var(--bin); }
+  .all-clear {
+    color: var(--personal); font-size: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .triage-card, .triage-card.dismissing { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+
+const { useState, useEffect, useMemo, useRef } = React;
+
+const STORAGE_KEY = 'feverland-data-v1';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { items: [] };
+}
+
+function saveData(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function daysAgo(ts) {
+  return Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24));
+}
+
+// ---------- Capture ----------
+function Capture({ items, addItem }) {
+  const [text, setText] = useState('');
+  const unsorted = items.filter(i => i.status === 'unsorted').sort((a,b) => b.createdAt - a.createdAt);
+
+  function submit() {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    addItem(trimmed);
+    setText('');
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      submit();
+    }
+  }
+
+  return (
+    <div>
+      <div className="panel-title">Capture</div>
+      <div className="capture-box">
+        <textarea
+          autoFocus
+          placeholder="What's on your mind? Ideas, tasks, anything — just get it out."
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+        <button className="add-btn" disabled={!text.trim()} onClick={submit}>
+          Add to pocket ({navigator.platform && navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter)
+        </button>
+      </div>
+      <div className="capture-log">
+        <div className="capture-log-label">Waiting to be sorted ({unsorted.length})</div>
+        {unsorted.length === 0 && (
+          <div className="empty-state" style={{padding: '20px 0'}}>
+            Nothing waiting — you're caught up.
+          </div>
+        )}
+        {unsorted.map(item => (
+          <div className="item-row" key={item.id}>
+            <div className="item-flag" style={{background: 'var(--ink-soft)'}} />
+            <div className="item-text">{item.text}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Triage ----------
+function Triage({ items, sortItem }) {
+  const queue = useMemo(
+    () => items.filter(i => i.status === 'unsorted').sort((a,b) => a.createdAt - b.createdAt),
+    [items]
+  );
+  const [step, setStep] = useState('destination'); // destination | personal-status | personal-tag | work-status
+  const [destination, setDestination] = useState(null);
+  const [chosenStatus, setChosenStatus] = useState(null);
+  const [dismissing, setDismissing] = useState(false);
+
+  const current = queue[0];
+
+  function reset() {
+    setStep('destination');
+    setDestination(null);
+    setChosenStatus(null);
+  }
+
+  function finalize(stream, status, tag) {
+    setDismissing(true);
+    setTimeout(() => {
+      sortItem(current.id, { stream, status, tag: tag || null });
+      setDismissing(false);
+      reset();
+    }, 200);
+  }
+
+  function bin() {
+    setDismissing(true);
+    setTimeout(() => {
+      sortItem(current.id, { stream: null, status: 'bin', tag: null });
+      setDismissing(false);
+      reset();
+    }, 200);
+  }
+
+  function skip() {
+    // move to back of queue by bumping createdAt-based sort — simplest: just reorder locally
+    // we simulate "skip" by temporarily marking nothing and relying on parent reordering.
+    sortItem(current.id, { skip: true });
+    reset();
+  }
+
+  if (!current) {
+    return (
+      <div>
+        <div className="panel-title">Triage</div>
+        <div className="empty-state">
+          <div className="big">Nothing to sort</div>
+          Capture something first, or enjoy the quiet.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="panel-title">Triage</div>
+      <div className="triage-progress">{queue.length} waiting</div>
+      <div className={"triage-card" + (dismissing ? " dismissing" : "")} key={current.id}>
+        <div className="triage-text">{current.text}</div>
+
+        {step === 'destination' && (
+          <React.Fragment>
+            <div className="triage-step-label">Where does this belong?</div>
+            <div className="triage-btn-row">
+              <button className="triage-btn personal-btn" onClick={() => { setDestination('personal'); setStep('personal-status'); }}>Personal</button>
+              <button className="triage-btn work-btn" onClick={() => { setDestination('work'); setStep('work-status'); }}>Work</button>
+              <button className="triage-btn bin-btn" onClick={bin}>Bin</button>
+              <button className="triage-btn skip-btn" onClick={skip}>Skip for now</button>
+            </div>
+          </React.Fragment>
+        )}
+
+        {step === 'personal-status' && (
+          <React.Fragment>
+            <div className="triage-step-label">Is it a task, or an idea for later?</div>
+            <div className="triage-btn-row">
+              <button className="triage-btn personal-btn" onClick={() => { setChosenStatus('do'); setStep('personal-tag'); }}>Do — active task</button>
+              <button className="triage-btn personal-btn" onClick={() => { setChosenStatus('someday'); setStep('personal-tag'); }}>Someday / maybe</button>
+            </div>
+            <button className="triage-back" onClick={reset}>← back</button>
+          </React.Fragment>
+        )}
+
+        {step === 'personal-tag' && (
+          <React.Fragment>
+            <div className="triage-step-label">Tag it (optional)</div>
+            <div className="triage-btn-row">
+              <button className="triage-btn creative-btn" onClick={() => finalize('personal', chosenStatus, 'creative')}>Creative / hobby</button>
+              <button className="triage-btn admin-btn" onClick={() => finalize('personal', chosenStatus, 'admin')}>Administrative</button>
+              <button className="triage-btn skip-btn" onClick={() => finalize('personal', chosenStatus, null)}>No tag</button>
+            </div>
+            <button className="triage-back" onClick={() => setStep('personal-status')}>← back</button>
+          </React.Fragment>
+        )}
+
+        {step === 'work-status' && (
+          <React.Fragment>
+            <div className="triage-step-label">Is it a task, or an idea for later?</div>
+            <div className="triage-btn-row">
+              <button className="triage-btn work-btn" onClick={() => finalize('work', 'do', null)}>Do — active task</button>
+              <button className="triage-btn work-btn" onClick={() => finalize('work', 'someday', null)}>Someday / maybe</button>
+            </div>
+            <button className="triage-back" onClick={reset}>← back</button>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Today ----------
+function Today({ items, stream, reorder, removeItem, completeItem }) {
+  const list = items
+    .filter(i => i.stream === stream && i.status === 'do')
+    .sort((a,b) => a.rank - b.rank);
+
+  const top3 = list.slice(0, 3);
+  const rest = list.slice(3);
+
+  function move(id, dir) {
+    reorder(stream, id, dir);
+  }
+
+  function renderRow(item, idx, isTop) {
+    return (
+      <div className={"today-item" + (isTop ? " top3" : "")} key={item.id}>
+        <div className="rank-num">{idx + 1}</div>
+        <div className="today-text">
+          {item.text}
+          {item.tag && (
+            <div className="item-meta">
+              <span className={"tag-chip " + item.tag}>{item.tag}</span>
+            </div>
+          )}
+        </div>
+        <div className="reorder-btns">
+          <button onClick={() => move(item.id, -1)} aria-label="Move up">▲</button>
+          <button onClick={() => move(item.id, 1)} aria-label="Move down">▼</button>
+        </div>
+        <div className="row-actions">
+          <button onClick={() => completeItem(item.id)} title="Done">✓</button>
+          <button onClick={() => removeItem(item.id)} title="Bin">✕</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="panel-title">Today — {stream === 'personal' ? 'Personal' : 'Work'}</div>
+      {list.length === 0 && (
+        <div className="empty-state">
+          <div className="big">Nothing on the list</div>
+          Sort a few items in Triage to fill this in.
+        </div>
+      )}
+      {top3.length > 0 && (
+        <React.Fragment>
+          <div className="section-divider">Top 3</div>
+          <div className="today-list">{top3.map((item, idx) => renderRow(item, idx, true))}</div>
+        </React.Fragment>
+      )}
+      {rest.length > 0 && (
+        <React.Fragment>
+          <div className="section-divider">Also this week</div>
+          <div className="today-list">{rest.map((item, idx) => renderRow(item, idx + 3, false))}</div>
+        </React.Fragment>
+      )}
+    </div>
+  );
+}
+
+// ---------- Someday ----------
+function Someday({ items, stream, removeItem, promoteItem }) {
+  const [tagFilter, setTagFilter] = useState('all');
+  let list = items.filter(i => i.stream === stream && i.status === 'someday');
+  if (stream === 'personal' && tagFilter !== 'all') {
+    list = list.filter(i => (tagFilter === 'none' ? !i.tag : i.tag === tagFilter));
+  }
+  list = list.sort((a,b) => b.createdAt - a.createdAt);
+
+  return (
+    <div>
+      <div className="panel-title">Someday / Maybe — {stream === 'personal' ? 'Personal' : 'Work'}</div>
+      {stream === 'personal' && (
+        <div className="tag-filter-row">
+          <button className={tagFilter === 'all' ? 'active' : ''} onClick={() => setTagFilter('all')}>All</button>
+          <button className={tagFilter === 'creative' ? 'active' : ''} onClick={() => setTagFilter('creative')}>Creative</button>
+          <button className={tagFilter === 'admin' ? 'active' : ''} onClick={() => setTagFilter('admin')}>Admin</button>
+          <button className={tagFilter === 'none' ? 'active' : ''} onClick={() => setTagFilter('none')}>Untagged</button>
+        </div>
+      )}
+      {list.length === 0 && (
+        <div className="empty-state">
+          <div className="big">Nothing parked here</div>
+          Ideas you're not acting on yet will collect in this list.
+        </div>
+      )}
+      {list.map(item => (
+        <div className="item-row" key={item.id}>
+          <div className="item-flag" style={{background: stream === 'personal' ? 'var(--personal)' : 'var(--work)'}} />
+          <div style={{flex: 1}}>
+            <div className="item-text">{item.text}</div>
+            <div className="item-meta">
+              {item.tag && <span className={"tag-chip " + item.tag}>{item.tag}</span>}
+              <span className="tag-chip" style={{background: 'transparent', color: 'var(--ink-soft)', border: '1px solid var(--hairline)'}}>
+                parked {daysAgo(item.createdAt)}d ago
+              </span>
+            </div>
+          </div>
+          <div className="row-actions">
+            <button onClick={() => promoteItem(item.id)} title="Move to Do">→ Do</button>
+            <button onClick={() => removeItem(item.id)} title="Bin">✕</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------- Review ----------
+function Review({ items, removeItem, promoteFromStale, keepFresh, stream }) {
+  const staleUnsorted = items.filter(i => i.status === 'unsorted' && daysAgo(i.createdAt) >= 7);
+  const staleSomeday = items.filter(i => i.stream === stream && i.status === 'someday' && daysAgo(i.createdAt) >= 30);
+  const doCount = items.filter(i => i.stream === stream && i.status === 'do').length;
+
+  return (
+    <div>
+      <div className="panel-title">Weekly Review — {stream === 'personal' ? 'Personal' : 'Work'}</div>
+
+      <div className="review-block">
+        <h3>Stuck in the pocket</h3>
+        <div className="review-count">{staleUnsorted.length} item(s) uncaptured for 7+ days, across both streams</div>
+        {staleUnsorted.length === 0 && <div className="all-clear">All clear — nothing lingering unsorted.</div>}
+        {staleUnsorted.map(item => (
+          <div className="stale-item-row" key={item.id}>
+            <div className="item-text">{item.text} <span style={{color:'var(--ink-soft)', fontSize: 12}}> · {daysAgo(item.createdAt)}d</span></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="review-block">
+        <h3>Someday items going quiet</h3>
+        <div className="review-count">{staleSomeday.length} idea(s) parked 30+ days without action</div>
+        {staleSomeday.length === 0 && <div className="all-clear">Nothing's gone stale.</div>}
+        {staleSomeday.map(item => (
+          <div className="stale-item-row" key={item.id}>
+            <div className="item-text">{item.text}</div>
+            <div className="stale-actions">
+              <button className="keep-btn" onClick={() => keepFresh(item.id)}>Still keen</button>
+              <button className="bin-btn2" onClick={() => removeItem(item.id)}>Let it go</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="review-block">
+        <h3>Current load</h3>
+        <div className="review-count">{doCount} active task(s) on your {stream} Today list right now.</div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- App ----------
+function App() {
+  const [data, setData] = useState(loadData);
+  const [stream, setStream] = useState('personal');
+  const [view, setView] = useState('capture');
+
+  useEffect(() => { saveData(data); }, [data]);
+
+  function addItem(text) {
+    setData(d => ({
+      items: [...d.items, {
+        id: uid(), text, createdAt: Date.now(),
+        stream: null, status: 'unsorted', tag: null, rank: 0
+      }]
+    }));
+  }
+
+  function sortItem(id, patch) {
+    setData(d => {
+      if (patch.skip) {
+        // bump createdAt so it cycles to the back of the triage queue
+        return { items: d.items.map(i => i.id === id ? { ...i, createdAt: Date.now() } : i) };
+      }
+      const items = d.items.map(i => {
+        if (i.id !== id) return i;
+        let rank = i.rank;
+        if (patch.status === 'do') {
+          const maxRank = Math.max(0, ...d.items.filter(x => x.stream === patch.stream && x.status === 'do').map(x => x.rank));
+          rank = maxRank + 1;
+        }
+        return { ...i, ...patch, rank };
+      });
+      return { items };
+    });
+  }
+
+  function reorder(streamName, id, dir) {
+    setData(d => {
+      const list = d.items.filter(i => i.stream === streamName && i.status === 'do').sort((a,b) => a.rank - b.rank);
+      const idx = list.findIndex(i => i.id === id);
+      const swapIdx = idx + dir;
+      if (swapIdx < 0 || swapIdx >= list.length) return d;
+      const a = list[idx], b = list[swapIdx];
+      const items = d.items.map(i => {
+        if (i.id === a.id) return { ...i, rank: b.rank };
+        if (i.id === b.id) return { ...i, rank: a.rank };
+        return i;
+      });
+      return { items };
+    });
+  }
+
+  function removeItem(id) {
+    setData(d => ({ items: d.items.map(i => i.id === id ? { ...i, status: 'bin' } : i) }));
+  }
+
+  function completeItem(id) {
+    setData(d => ({ items: d.items.map(i => i.id === id ? { ...i, status: 'done' } : i) }));
+  }
+
+  function promoteItem(id) {
+    setData(d => {
+      const target = d.items.find(i => i.id === id);
+      const maxRank = Math.max(0, ...d.items.filter(x => x.stream === target.stream && x.status === 'do').map(x => x.rank));
+      return { items: d.items.map(i => i.id === id ? { ...i, status: 'do', rank: maxRank + 1 } : i) };
+    });
+  }
+
+  function keepFresh(id) {
+    setData(d => ({ items: d.items.map(i => i.id === id ? { ...i, createdAt: Date.now() } : i) }));
+  }
+
+  const NAV = [
+    { key: 'capture', label: 'Capture' },
+    { key: 'triage', label: 'Triage' },
+    { key: 'today', label: 'Today' },
+    { key: 'someday', label: 'Someday' },
+    { key: 'review', label: 'Review' },
+  ];
+
+  return (
+    <React.Fragment>
+      <header className="app-header">
+        <h1 className="wordmark">Feverland</h1>
+        <div className="stream-toggle">
+          <button className={"personal" + (stream === 'personal' ? ' active' : '')} onClick={() => setStream('personal')}>Personal</button>
+          <button className={"work" + (stream === 'work' ? ' active' : '')} onClick={() => setStream('work')}>Work</button>
+        </div>
+      </header>
+      <nav className="pill-nav">
+        {NAV.map(n => (
+          <button key={n.key} className={view === n.key ? 'active' : ''} onClick={() => setView(n.key)}>{n.label}</button>
+        ))}
+      </nav>
+      <main>
+        {view === 'capture' && <Capture items={data.items} addItem={addItem} />}
+        {view === 'triage' && <Triage items={data.items} sortItem={sortItem} />}
+        {view === 'today' && <Today items={data.items} stream={stream} reorder={reorder} removeItem={removeItem} completeItem={completeItem} />}
+        {view === 'someday' && <Someday items={data.items} stream={stream} removeItem={removeItem} promoteItem={promoteItem} />}
+        {view === 'review' && <Review items={data.items} stream={stream} removeItem={removeItem} keepFresh={keepFresh} />}
+      </main>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
