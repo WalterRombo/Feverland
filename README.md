@@ -27,6 +27,10 @@ Everything is stored locally in the browser (`localStorage`) — nothing leaves 
 4. Wait a minute or two, then visit `https://<your-username>.github.io/feverland/`.
 5. On your phone, open that URL and use **Add to Home Screen** (Safari: Share → Add to Home Screen; Android Chrome: menu → Add to Home Screen) to install it like an app.
 
+## A fix already applied (worth knowing about)
+
+The CDN script tags for React, ReactDOM, and Babel Standalone are pinned to specific versions rather than "latest". `@babel/standalone`'s unversioned CDN link recently moved to Babel 8, which changed how it compiles JSX in the browser (it defaults to React's "automatic" runtime, which needs an ES module import that a plain `<script>` tag can't resolve) — this silently breaks the whole app with no visible error beyond a blank page. If you ever see a blank cream screen again with nothing clickable, check that these three script tags at the top of `index.html` still have explicit version numbers rather than just `@babel/standalone` or `react@18` with nothing after it.
+
 ## Notes / things you might want to tweak
 
 - Renaming: it's called "Feverland" throughout the UI (`<h1>` in `index.html`) and in `manifest.json` — change both if you want a different name.
